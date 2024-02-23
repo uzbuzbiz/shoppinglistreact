@@ -68,7 +68,7 @@ button.remove {
 }
 
 /* Estilos para pantallas móviles */
-@media (max-width: 600px) {
+@media (max-width: 900px) {
   .container {
     width: 90%;
   }

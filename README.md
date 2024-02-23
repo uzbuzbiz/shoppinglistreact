@@ -1,1 +1,1 @@
-Aplicación en react para una lista de la compra, todavía en desarrollo con un posible port a Android 
+ªaA

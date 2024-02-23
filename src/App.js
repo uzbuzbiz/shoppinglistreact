@@ -1,33 +1,65 @@
+//pa que se vea bonito
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faSort } from '@fortawesome/free-solid-svg-icons'
+//funcionalidad basica
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function FilasProducto({ producto, onToggle }) {
-  const name = producto.cantidad>0 ? producto.name:
-  <span>
-    {producto.name}
-  </span>;
+  const name = producto.cantidad > 0 ? producto.name :
+    <span>
+      {producto.name}
+    </span>;
 
-  return(
+  return (
     <tr>
       <td>{name}</td>
       <td>{producto.cantidad}</td>
-      <td><input type="checkbox" onChange={() => onToggle(producto.id)}/></td>
+      <td><input type="checkbox" onChange={() => onToggle(producto.id)} /></td>
     </tr>
   );
 }
 
-
 function TablaProductos({ productos, onRemove }) {
   const [marked, setMarked] = useState([]);
+  const [sortConfig, setSortConfig] = useState(null);
 
   const toggleMarked = (name) => {
     setMarked(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]);
   };
 
-  const rows = productos.map((producto) => (
+  const sortedProductos = React.useMemo(() => {
+    let sortableProductos = [...productos];
+    if (sortConfig !== null) {
+      sortableProductos.sort((a, b) => {
+        // Convierte las claves a minúsculas antes de comparar
+        const aValue = typeof a[sortConfig.key] === 'string' ? a[sortConfig.key].toLowerCase() : a[sortConfig.key];
+        const bValue = typeof b[sortConfig.key] === 'string' ? b[sortConfig.key].toLowerCase() : b[sortConfig.key];
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableProductos;
+  }, [productos, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const rows = sortedProductos.map((producto) => (
     <FilasProducto
       producto={producto}
-      key={producto.name}
+      key={producto.id}
       onToggle={toggleMarked}
     />
   ));
@@ -43,8 +75,12 @@ function TablaProductos({ productos, onRemove }) {
         <table>
           <thead>
             <tr>
-              <th>Nombre</th>
-              <th>Cantidad</th>
+              <th onClick={() => requestSort('name')}>
+                Nombre <FontAwesomeIcon icon={faSort} />
+              </th>
+              <th onClick={() => requestSort('cantidad')}>
+                Cantidad <FontAwesomeIcon icon={faSort} />
+              </th>
               <th>Marcar</th>
             </tr>
           </thead>
@@ -58,13 +94,12 @@ function TablaProductos({ productos, onRemove }) {
   );
 }
 
-
 function MenuAñadirProductos({ onAddProduct }) {
   const [inputValue, setInputValue] = useState("");
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    const [name,cantidad] = inputValue.split(",");
+    const [name, cantidad] = inputValue.split(",");
     if (!name.trim()) {
       alert("Por favor, introduce un producto.");
       return;
@@ -74,7 +109,7 @@ function MenuAñadirProductos({ onAddProduct }) {
     onAddProduct({ name, cantidad: cantidadNumerica });
     setInputValue("");
   };
-  
+
 
   return (
     <form onSubmit={handleSubmit} className="form-container">
@@ -93,7 +128,7 @@ function TablaCompleta({ productos, onAddProduct, onRemove }) {
   );
 }
 var listaProductos = []
-export default function App(){
+export default function App() {
   // Inicializa el estado productos con los datos de localStorage si existen, si no, usa listaProductos
   const [productos, setProductos] = useState(JSON.parse(localStorage.getItem('productos')) || listaProductos);
 
@@ -112,5 +147,5 @@ export default function App(){
     setProductos(prevProductos => prevProductos.filter(producto => !ids.includes(producto.id)));
   };
 
-  return <TablaCompleta productos={productos} onAddProduct={handleAddProduct} onRemove={handleRemoveProducts} />;  
+  return <TablaCompleta productos={productos} onAddProduct={handleAddProduct} onRemove={handleRemoveProducts} />;
 }
