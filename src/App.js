@@ -1,16 +1,19 @@
-//pa que se vea bonito
+// Importamos los iconos necesarios para la tabla
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSort } from '@fortawesome/free-solid-svg-icons'
-//funcionalidad basica
+
+// Importamos los hooks y componentes necesarios de React
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
+// Componente para cada fila de producto en la tabla
 function FilasProducto({ producto, onToggle }) {
-  const name = producto.cantidad > 0 ? producto.name :
-    <span>
-      {producto.name}
-    </span>;
 
+  // Asigna el nombre del producto a la constante 'name'
+  const name = producto.name;
+
+
+  // Devolvemos una fila de tabla con el nombre del producto, la cantidad y un checkbox para marcar el producto
   return (
     <tr>
       <td>{name}</td>
@@ -20,14 +23,18 @@ function FilasProducto({ producto, onToggle }) {
   );
 }
 
+// Componente para la tabla de productos
 function TablaProductos({ productos, onRemove }) {
+  // Estado para los productos marcados y la configuración de ordenación
   const [marked, setMarked] = useState([]);
   const [sortConfig, setSortConfig] = useState(null);
 
+  // Función para marcar o desmarcar un producto
   const toggleMarked = (name) => {
     setMarked(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]);
   };
 
+  // Ordenamos los productos según la configuración de ordenación
   const sortedProductos = React.useMemo(() => {
     let sortableProductos = [...productos];
     if (sortConfig !== null) {
@@ -48,6 +55,7 @@ function TablaProductos({ productos, onRemove }) {
     return sortableProductos;
   }, [productos, sortConfig]);
 
+  // Función para solicitar la ordenación por una clave específica
   const requestSort = (key) => {
     let direction = 'ascending';
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -56,6 +64,7 @@ function TablaProductos({ productos, onRemove }) {
     setSortConfig({ key, direction });
   };
 
+  // Creamos las filas de la tabla para cada producto
   const rows = sortedProductos.map((producto) => (
     <FilasProducto
       producto={producto}
@@ -64,11 +73,13 @@ function TablaProductos({ productos, onRemove }) {
     />
   ));
 
+  // Función para manejar la eliminación de los productos marcados
   const handleRemove = () => {
     onRemove(marked);
     setMarked([]);
   };
 
+  // Devolvemos la tabla de productos y el botón para eliminar los productos marcados
   return (
     <div>
       <div className="table-container">
@@ -94,9 +105,12 @@ function TablaProductos({ productos, onRemove }) {
   );
 }
 
+// Componente para el menú de añadir productos
 function MenuAñadirProductos({ onAddProduct }) {
+  // Estado para el valor del input
   const [inputValue, setInputValue] = useState("");
 
+  // Función para manejar el envío del formulario
   const handleSubmit = (event) => {
     event.preventDefault();
     const [name, cantidad] = inputValue.split(",");
@@ -110,7 +124,7 @@ function MenuAñadirProductos({ onAddProduct }) {
     setInputValue("");
   };
 
-
+  // Devolvemos el formulario para añadir productos
   return (
     <form onSubmit={handleSubmit} className="form-container">
       <input type="text" placeholder="Producto, cantidad" value={inputValue} onChange={e => setInputValue(e.target.value)} />
@@ -119,7 +133,9 @@ function MenuAñadirProductos({ onAddProduct }) {
   );
 }
 
+// Componente para la tabla completa de productos
 function TablaCompleta({ productos, onAddProduct, onRemove }) {
+  // Devolvemos el menú para añadir productos y la tabla de productos
   return (
     <div className="container">
       <MenuAñadirProductos onAddProduct={onAddProduct} />
@@ -127,25 +143,33 @@ function TablaCompleta({ productos, onAddProduct, onRemove }) {
     </div>
   );
 }
+
 var listaProductos = []
+
+// Exportamos la función App como el componente principal
 export default function App() {
-  // Inicializa el estado productos con los datos de localStorage si existen, si no, usa listaProductos
+  // Inicializamos el estado 'productos' con los datos de localStorage si existen, si no, usamos 'listaProductos'
   const [productos, setProductos] = useState(JSON.parse(localStorage.getItem('productos')) || listaProductos);
 
+  // Usamos useEffect para actualizar localStorage cada vez que 'productos' cambia
   useEffect(() => {
-    // Actualiza localStorage cada vez que productos cambia
     localStorage.setItem('productos', JSON.stringify(productos));
   }, [productos]);
 
+  // Función para manejar la adición de un producto
   const handleAddProduct = (producto) => {
-    // Añade un ID único al producto
+    // Añadimos un ID único al producto
     producto.id = Date.now();
+    // Actualizamos el estado 'productos' con el nuevo producto
     setProductos(prevProductos => [...prevProductos, producto]);
   };
 
+  // Función para manejar la eliminación de productos
   const handleRemoveProducts = (ids) => {
+    // Filtramos 'productos' para eliminar los productos cuyos IDs están en 'ids'
     setProductos(prevProductos => prevProductos.filter(producto => !ids.includes(producto.id)));
   };
 
+  // Renderizamos el componente 'TablaCompleta' con las props necesarias
   return <TablaCompleta productos={productos} onAddProduct={handleAddProduct} onRemove={handleRemoveProducts} />;
 }
